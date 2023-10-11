@@ -13,6 +13,8 @@ Column(
 ),
 ```
 
+![video](screenshots/video1.gif)
+
 ## Additional information
 
 This widget supports customization to some degree but a full fledged package is coming soon!
