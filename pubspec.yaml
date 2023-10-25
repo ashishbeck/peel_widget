@@ -1,6 +1,6 @@
 name: peel_widget
 description: Widget that can be peeled to perform any action.
-version: 0.0.1
+version: 0.1.0
 homepage:
 
 environment:

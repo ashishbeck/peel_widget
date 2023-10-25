@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:peel_widget/src/utils/utils.dart';
 
 class UndersidePainter extends CustomPainter {
+  final Color color;
   final double dragPerc;
   final double radius;
   final String text;
   final TextStyle textStyle;
   UndersidePainter({
+    required this.color,
     required this.dragPerc,
     required this.radius,
     required this.text,
@@ -14,13 +16,15 @@ class UndersidePainter extends CustomPainter {
   });
   @override
   void paint(Canvas canvas, Size size) {
-    const gradient = LinearGradient(
+    final gradient = LinearGradient(
       colors: [
-        Color.fromARGB(255, 192, 144, 255),
-        Color.fromARGB(255, 144, 147, 245),
-        Color.fromARGB(255, 185, 187, 255),
+        color.withRed((color.red + 50).clamp(0, 255)),
+        color,
+        color
+            .withRed((color.red + 40).clamp(0, 255))
+            .withGreen((color.green + 40).clamp(0, 255)),
       ],
-      stops: [0, 0.2, 1.5],
+      stops: const [0, 0.2, 1.5],
     );
     const heightIncrease = 6;
     final rect = Rect.fromLTRB(

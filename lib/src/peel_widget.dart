@@ -10,6 +10,9 @@ class PeelWidget extends StatefulWidget {
     super.key,
     this.height = 56.0,
     this.radius = 16.0,
+    this.hiddenMargin = 0.97,
+    this.maxRevealOnDrag = 0.75,
+    this.dashedBorderMargin = -8,
     this.text = 'Get Started!',
     this.color = const Color(0xFF9093FF),
     this.textStyle = const TextStyle(
@@ -20,10 +23,16 @@ class PeelWidget extends StatefulWidget {
     this.onSuccessfulPeel,
     this.duration = const Duration(milliseconds: 500),
     this.curve = Curves.easeOutCubic,
-  });
+  }) : assert(
+          hiddenMargin < 1 && hiddenMargin > 0,
+          'The hidden margin has to be between 0 and 1',
+        );
 
   final double height;
   final double radius;
+  final double hiddenMargin;
+  final double maxRevealOnDrag;
+  final double dashedBorderMargin;
   final String text;
   final Color color;
   final TextStyle textStyle;
@@ -38,7 +47,7 @@ class PeelWidget extends StatefulWidget {
 class _PeelWidgetState extends State<PeelWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
-  final _rightMargin = 0.97;
+  double get _hiddenMargin => widget.hiddenMargin;
 
   @override
   void initState() {
@@ -48,7 +57,7 @@ class _PeelWidgetState extends State<PeelWidget>
       lowerBound: -0.1,
       upperBound: 0.98,
       duration: widget.duration,
-    )..value = _rightMargin;
+    )..value = _hiddenMargin;
   }
 
   @override
@@ -61,33 +70,35 @@ class _PeelWidgetState extends State<PeelWidget>
   Widget build(BuildContext context) {
     final utils = Utils();
     return LayoutBuilder(builder: (context, constraints) {
+      final maxWidth = constraints.maxWidth;
       return ListenableBuilder(
           listenable: controller,
           builder: (context, _) {
             final stickerEdge = utils.mapRange(
               utils.stickerLeading(
-                constraints.maxWidth,
+                maxWidth,
                 controller.value,
               ),
               0,
-              constraints.maxWidth,
-              -constraints.maxWidth / 2,
-              constraints.maxWidth / 2,
+              maxWidth,
+              -maxWidth / 2,
+              maxWidth / 2,
             );
             return GestureDetector(
               onTap: () => _onTap(),
               onPanUpdate: (DragUpdateDetails details) =>
-                  _onPanUpdate(details, constraints),
+                  _onPanUpdate(details, maxWidth),
               onPanEnd: (DragEndDetails details) => _onPanEnd(details),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   // Base dashed border
                   CustomPaint(
-                    size: Size(constraints.maxWidth - 8, widget.height - 8),
+                    size: Size(maxWidth, widget.height),
                     painter: DottedPainter(
                       radius: widget.radius,
                       color: Colors.black,
+                      margin: widget.dashedBorderMargin,
                     ),
                   ),
 
@@ -101,7 +112,7 @@ class _PeelWidgetState extends State<PeelWidget>
                       ),
                       child: Container(
                         constraints: BoxConstraints.expand(
-                            height: widget.height, width: constraints.maxWidth),
+                            height: widget.height, width: maxWidth),
                         color: widget.color,
                         child: Center(
                           child: Text(
@@ -137,8 +148,9 @@ class _PeelWidgetState extends State<PeelWidget>
 
                   // Underside Widget
                   CustomPaint(
-                    size: Size(constraints.maxWidth, widget.height),
+                    size: Size(maxWidth, widget.height),
                     painter: UndersidePainter(
+                      color: widget.color,
                       dragPerc: controller.value * 1,
                       radius: widget.radius,
                       text: widget.text,
@@ -149,14 +161,13 @@ class _PeelWidgetState extends State<PeelWidget>
                   // Glow
                   Transform.translate(
                     offset: Offset(
-                      stickerEdge + constraints.maxWidth / 2 - 8,
+                      stickerEdge + maxWidth / 2 - 8,
                       0,
                     ),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
-                        width:
-                            constraints.maxWidth * (1 - controller.value) + 8,
+                        width: maxWidth * (1 - controller.value) + 8,
                         height: widget.height,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(widget.radius),
@@ -176,15 +187,11 @@ class _PeelWidgetState extends State<PeelWidget>
                     clipper: TextClipper(dragPerc: controller.value),
                     child: Container(
                       constraints: BoxConstraints.expand(
-                          height: widget.height, width: constraints.maxWidth),
+                          height: widget.height, width: maxWidth),
                       child: Transform.translate(
                         offset: Offset(
-                          utils.mapRange(
-                              controller.value,
-                              0,
-                              1,
-                              -constraints.maxWidth / 2 - 150,
-                              constraints.maxWidth / 2 + 120),
+                          utils.mapRange(controller.value, 0, 1,
+                              -maxWidth / 2 - 150, maxWidth / 2 + 120),
                           0,
                         ),
                         child: Transform.scale(
@@ -205,7 +212,7 @@ class _PeelWidgetState extends State<PeelWidget>
                   // Hint Arrow
                   Opacity(
                     opacity: utils
-                        .mapRange(controller.value, 0.85, _rightMargin, 0, 1)
+                        .mapRange(controller.value, 0.85, _hiddenMargin, 0, 1)
                         .clamp(0, 1),
                     child: Transform.translate(
                         offset: Offset(
@@ -227,12 +234,12 @@ class _PeelWidgetState extends State<PeelWidget>
   _onTap() async {
     const duration = Duration(milliseconds: 400);
     await controller.animateTo(
-      _rightMargin * 0.95,
+      _hiddenMargin * 0.95,
       duration: duration,
       curve: Curves.easeOut,
     );
     await controller.animateTo(
-      _rightMargin,
+      _hiddenMargin,
       duration: duration,
       curve: Curves.easeIn,
     );
@@ -249,13 +256,14 @@ class _PeelWidgetState extends State<PeelWidget>
       );
       if (widget.onSuccessfulPeel != null) widget.onSuccessfulPeel!();
     } else {
-      controller.animateTo(_rightMargin, curve: widget.curve);
+      controller.animateTo(_hiddenMargin, curve: widget.curve);
     }
   }
 
-  void _onPanUpdate(DragUpdateDetails details, BoxConstraints constraints) {
-    final dx = details.delta.dx / constraints.maxWidth;
-    final value = (controller.value + dx).clamp(0.25, _rightMargin);
+  void _onPanUpdate(DragUpdateDetails details, double maxWidth) {
+    final dx = details.delta.dx / maxWidth;
+    final value = (controller.value + dx)
+        .clamp(1 - widget.maxRevealOnDrag, _hiddenMargin);
     controller.value = value;
   }
 }

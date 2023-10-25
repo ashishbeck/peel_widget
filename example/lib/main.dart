@@ -42,6 +42,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final isDesktop = (platform == TargetPlatform.linux ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.windows);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -51,13 +57,16 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: PeelWidget(
-                onSuccessfulPeel: () => controller.animateToPage(
-                  1,
-                  duration: duration,
-                  curve: curve,
+            SizedBox(
+              width: isDesktop || isLandscape ? 500 : null,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: PeelWidget(
+                  onSuccessfulPeel: () => controller.animateToPage(
+                    1,
+                    duration: duration,
+                    curve: curve,
+                  ),
                 ),
               ),
             ),
@@ -82,51 +91,62 @@ class SecondPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final isDesktop = (platform == TargetPlatform.linux ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.windows);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Second Page'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Row(
+      body: Center(
+        child: SizedBox(
+          width: isDesktop || isLandscape ? 500 : null,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  onPressed: () => controller.animateToPage(0,
-                      duration: duration, curve: curve),
-                  style: IconButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: const BorderSide(color: Colors.grey),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => controller.animateToPage(0,
+                          duration: duration, curve: curve),
+                      style: IconButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: Colors.grey),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          fixedSize: const Size(double.infinity, 48)),
+                      icon: const Icon(
+                        Icons.arrow_back,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      fixedSize: const Size(double.infinity, 48)),
-                  icon: const Icon(
-                    Icons.arrow_back,
-                  ),
-                  color: color,
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {},
-                    style: FilledButton.styleFrom(
-                      backgroundColor: color,
-                      fixedSize: const Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                      color: color,
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {},
+                        style: FilledButton.styleFrom(
+                          backgroundColor: color,
+                          fixedSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text('Next'),
                       ),
                     ),
-                    child: const Text('Next'),
-                  ),
+                  ],
                 ),
+                const SizedBox(height: 32),
               ],
             ),
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
       ),
     );
